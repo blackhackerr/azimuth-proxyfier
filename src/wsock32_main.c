@@ -28,11 +28,21 @@
  * OF SUCH DAMAGE.
  */
 
+#ifdef WS2
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#endif
+
 #include <windows.h>
 #include <stdio.h>
 #include <string.h>
 
+#ifdef WS2
+#include "ws2_32_funcs.h"
+#else
 #include "wsock32_funcs.h"
+#endif
 #include "wsock32_hostbyname.h"
 #include "wsock32_config.h"
 
@@ -48,7 +58,11 @@ BOOL APIENTRY DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpvReserved)
 			// get system path
 			if (GetSystemDirectoryA(g_system32_path, MAX_PATH - 1))
 			{
+#ifdef WS2
+				sprintf(g_wsock32orig_path, "%s\\ws2_32.dll", g_system32_path);
+#else
 				sprintf(g_wsock32orig_path, "%s\\wsock32.dll", g_system32_path);
+#endif
 			}
 			// load original library
 			if (!g_wsock32orig && strlen(g_wsock32orig_path))
@@ -69,9 +83,20 @@ BOOL APIENTRY DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpvReserved)
 					g_f_addr[i] = NULL;
 				}
 			}
-			if (GetModuleFileName(hInstDLL, g_ini_path, MAX_PATH - 1 - 5))
+			if (GetModuleFileName(hInstDLL, g_ini_path, MAX_PATH - 1))
 			{
-				strcat(g_ini_path, ".conf");
+				size_t ini_path_size = strlen(g_ini_path);
+				while (ini_path_size >= 0)
+				{
+					if (g_ini_path[ini_path_size] == '\\')
+					{
+						ini_path_size++;
+						break;
+					}
+					ini_path_size--;
+				}
+				g_ini_path[ini_path_size] = '\0';
+				strcat(g_ini_path, "azimuth.conf");
 			}
 			conf_init();
 			hbn_init();

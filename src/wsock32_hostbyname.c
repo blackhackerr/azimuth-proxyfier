@@ -28,8 +28,19 @@
  * OF SUCH DAMAGE.
  */
 
+#ifdef WS2
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#endif
+
 #include "wsock32_hostbyname.h"
+#ifdef WS2
+#include "ws2_32_stubs.h"
+#else
 #include "wsock32_stubs.h"
+#endif
+#include <stdlib.h>
 
 typedef struct HBN_NODE HBN_NODE;
 struct HBN_NODE

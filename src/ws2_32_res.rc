@@ -19,11 +19,11 @@ FILESUBTYPE VFT2_UNKNOWN
   {
     BLOCK "040904B0"
     {
-      VALUE "FileDescription", "Proxifier for wsock32.dll\0"
+      VALUE "FileDescription", "Proxifier for ws2_32.dll\0"
       VALUE "FileVersion", "0.1.0.0\0"
-      VALUE "InternalName", "Azimuth\0"
+      VALUE "InternalName", "Azimuth2\0"
       VALUE "LegalCopyright", "© 2011 Pavel Samko\0"
-      VALUE "OriginalFilename", "azimuth.dll\0"
+      VALUE "OriginalFilename", "azimuth2.dll\0"
       VALUE "ProductName", "Azimuth\0"
       VALUE "ProductVersion", "0.1.0.0\0"
     }

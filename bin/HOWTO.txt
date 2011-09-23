@@ -1,0 +1,4 @@
+HOWE TO USE
+
+1. Copy the files ("azimuth.conf", "libntlm-0.dll", "ws2_32.dll", "wsock32.dll") to the directory with the program;
+2. Edit the file "azimuth.conf" according to the settings of your proxy server;

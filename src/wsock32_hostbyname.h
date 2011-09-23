@@ -34,7 +34,11 @@
 #define WSOCK32_HOSTBYNAME_H
 
 #include <windows.h>
+#ifdef WS2
+#include <winsock2.h>
+#else
 #include <winsock.h>
+#endif
 
 void hbn_init(void);
 void hbn_deinit(void);
