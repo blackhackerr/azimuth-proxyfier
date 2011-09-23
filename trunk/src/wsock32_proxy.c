@@ -28,14 +28,32 @@
  * OF SUCH DAMAGE.
  */
 
+#ifdef WS2
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#endif
+
 #include <windows.h>
+#ifdef WS2
+#include <winsock2.h>
+#else
 #include <winsock.h>
+#endif
 #include <stdlib.h>
 #include <stdio.h>
 #include "wsock32_base64.h"
+#ifdef WS2
+#include "ws2_32_funcs.h"
+#else
 #include "wsock32_funcs.h"
+#endif
 #include "wsock32_hostbyname.h"
+#ifdef WS2
+#include "ws2_32_stubs.h"
+#else
 #include "wsock32_stubs.h"
+#endif
 #include "wsock32_fifobuff.h"
 #include "wsock32_httpparser.h"
 #include "wsock32_config.h"
@@ -132,7 +150,7 @@ char * p_getntlm(char * challenge)
 			memset(&challenge_dec, 0, sizeof(tSmbNtlmAuthChallenge));
 			base64_dec(challenge, challenge_size, (char *)&challenge_dec, challenge_dec_size);
 			tSmbNtlmAuthResponse ntlm;
-			buildSmbNtlmAuthResponse(&challenge_dec, &ntlm, g_proxy_user, NULL);
+			buildSmbNtlmAuthResponse(&challenge_dec, &ntlm, g_proxy_user, g_proxy_pass);
 			size_t ntlm_size = SmbLength(&ntlm);
 			size_t ntlm_enc_size = base64_enc_size((char *)&ntlm, ntlm_size);
 			ntlm_enc = (char *)malloc(ntlm_enc_size + 1);
@@ -387,9 +405,22 @@ int p_connecttoproxy(SOCKET s, char * name, u_long ip, u_short port)
 				{
 					if (answer_code == HTTP_PROXY_AUTHENTICATION_REQUIRED)
 					{
-						char * ntlm = hp_answer_getvalueforkey(answer, "Proxy-Authenticate");
-						if (ntlm && (strlen(ntlm) > 4))
+						char * ntlm_s = hp_answer_getvalueforkey(answer, "Proxy-Authenticate");
+						if (ntlm_s && (strlen(ntlm_s) > 4))
 						{
+							// need recive http data
+							char * conlen_s = hp_answer_getvalueforkey(answer, "Content-Length");
+							if (conlen_s)
+							{
+								size_t conlen = (size_t)atoi(conlen_s);
+								FIFOBUFF * rbuff = fb_new(conlen);
+								fb_pushzero(rbuff, conlen);
+								if (!p_recv(s, (char *)fb_getdataptr(rbuff), conlen))
+								{
+									break;
+								}
+								fb_delete(rbuff);
+							}
 							continue;
 						}
 						break;

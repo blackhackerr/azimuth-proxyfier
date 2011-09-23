@@ -89,13 +89,13 @@ char * _removespacesuffix(char * s)
 		size_t s_len = strlen(s);
 		while (s_len > 0)
 		{
-			if (s[s_len] != ' ')
+			if (s[s_len - 1] != ' ')
 			{
-				s[s_len + 1] = '\0';
 				break;
 			}
 			s_len--;
 		}
+		s[s_len] = '\0';
 	}
 	return s;
 }
