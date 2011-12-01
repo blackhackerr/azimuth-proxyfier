@@ -7,8 +7,8 @@
 LANGUAGE LANG_ENGLISH,SUBLANG_ENGLISH_US
 
 VS_VERSION_INFO VERSIONINFO
-FILEVERSION 0,1,0,0
-PRODUCTVERSION 0,1,0,0
+FILEVERSION 0,1,0,1
+PRODUCTVERSION 0,1,0,1
 FILEFLAGSMASK 0x3F
 FILEFLAGS 0x0
 FILEOS VOS_NT_WINDOWS32
@@ -20,12 +20,12 @@ FILESUBTYPE VFT2_UNKNOWN
     BLOCK "040904B0"
     {
       VALUE "FileDescription", "Proxifier for wsock32.dll\0"
-      VALUE "FileVersion", "0.1.0.0\0"
+      VALUE "FileVersion", "0.1.0.1\0"
       VALUE "InternalName", "Azimuth\0"
       VALUE "LegalCopyright", "© 2011 Pavel Samko\0"
       VALUE "OriginalFilename", "azimuth.dll\0"
       VALUE "ProductName", "Azimuth\0"
-      VALUE "ProductVersion", "0.1.0.0\0"
+      VALUE "ProductVersion", "0.1.0.1\0"
     }
   }
   BLOCK "VarFileInfo"

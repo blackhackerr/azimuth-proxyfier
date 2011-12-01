@@ -98,6 +98,21 @@ BOOL APIENTRY DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpvReserved)
 				g_ini_path[ini_path_size] = '\0';
 				strcat(g_ini_path, "azimuth.conf");
 			}
+			if (GetModuleFileName(hInstDLL, g_hosts_path, MAX_PATH - 1))
+			{
+				size_t hosts_path_size = strlen(g_hosts_path);
+				while (hosts_path_size >= 0)
+				{
+					if (g_hosts_path[hosts_path_size] == '\\')
+					{
+						hosts_path_size++;
+						break;
+					}
+					hosts_path_size--;
+				}
+				g_hosts_path[hosts_path_size] = '\0';
+				strcat(g_hosts_path, "hosts");
+			}
 			conf_init();
 			hbn_init();
             break;
