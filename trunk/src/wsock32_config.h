@@ -36,6 +36,7 @@
 #include <windows.h>
 
 extern char g_ini_path[MAX_PATH];
+extern char g_hosts_path[MAX_PATH];
 
 extern int g_proxy_use;
 extern char g_proxy_addr[MAX_PATH];
@@ -44,6 +45,7 @@ extern int g_proxy_useauth;
 extern int g_proxy_usentlm;
 extern char g_proxy_user[MAX_PATH];
 extern char g_proxy_pass[MAX_PATH];
+extern int g_proxy_usehosts;
 
 void conf_init(void);
 void conf_deinit(void);

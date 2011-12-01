@@ -15,10 +15,10 @@ AS = poasm.exe#
 RC = porc.exe#
 LINK = polink.exe#
 SIGN = posign.exe#
-CCFLAGS =  -Tx86-coff -MT -Ot -Ob1 -fp:precise -W1 -Gd -Ze -DWS2 #
+CCFLAGS = -Tx86-coff -MT -Ot -Ob1 -fp:precise -W1 -Gd -Ze -DWS2 #
 ASFLAGS = -AIA32 -Zi -Gz #
 RCFLAGS = #
-LINKFLAGS =  -subsystem:windows -machine:x86 -dll kernel32.lib user32.lib gdi32.lib comctl32.lib comdlg32.lib advapi32.lib delayimp.lib ntlm.lib#
+LINKFLAGS = -subsystem:windows -machine:x86 -dll kernel32.lib user32.lib gdi32.lib comctl32.lib comdlg32.lib advapi32.lib delayimp.lib ntlm.lib#
 SIGNFLAGS = -timeurl:http://timestamp.verisign.com/scripts/timstamp.dll -location:CU -store:MY -errkill#
 INCLUDE = $(PellesCDir)\Include\Win;$(PellesCDir)\Include;.\ext\libntlm\include#
 LIB = $(PellesCDir)\Lib\Win;$(PellesCDir)\Lib;.\ext\libntlm\lib#
@@ -70,7 +70,8 @@ obj\wsock32_proxy.obj: \
 obj\wsock32_hostbyname.obj: \
 	src\wsock32_hostbyname.c \
 	src\wsock32_hostbyname.h \
-	src\ws2_32_stubs.h
+	src\ws2_32_stubs.h \
+	src\wsock32_config.h
 	$(CC) $(CCFLAGS) "$!" -Fo"$@"
 
 # 
@@ -129,6 +130,6 @@ obj\ws2_32_stubs.obj: \
 	src\ws2_32_funcs.h
 	$(CC) $(CCFLAGS) "$!" -Fo"$@"
 
-.EXCLUDEDFILES:
-
 .SILENT:
+
+.EXCLUDEDFILES:

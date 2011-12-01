@@ -40,12 +40,17 @@
 #else
 #include "wsock32_stubs.h"
 #endif
+#include "wsock32_config.h"
 #include <stdlib.h>
+#include <stdio.h>
+
+#define NO_IP 0
 
 typedef struct HBN_NODE HBN_NODE;
 struct HBN_NODE
 {
 	HOSTENT * m_hostent;
+	char * m_host_ip;
 	HBN_NODE * m_next;
 };
 
@@ -57,7 +62,7 @@ typedef struct HBN
 
 HBN * g_hbn = NULL;
 
-HOSTENT * _hbn_newhostent(const char * a)
+HOSTENT * _hbn_newhostent(const char * a, u_long ip)
 {
 	HOSTENT * result = NULL;
 	if (a)
@@ -80,7 +85,13 @@ HOSTENT * _hbn_newhostent(const char * a)
 		result->h_addr_list = (char **)malloc(sizeof(char *) * 2);
 		result->h_addr_list[0] = (char *)malloc(sizeof(u_long));
 		result->h_addr_list[1] = NULL;
-		memcpy(result->h_addr_list[0], &result, sizeof(u_long)); // :)
+		if (ip != NO_IP)
+		{
+			memcpy(result->h_addr_list[0], &ip, sizeof(u_long));
+		} else
+		{
+			memcpy(result->h_addr_list[0], &result, sizeof(u_long)); // :)
+		}
 	}
 	return result;
 }
@@ -117,6 +128,51 @@ void hbn_init(void)
 		memset(g_hbn, 0, sizeof(HBN));
 		InitializeCriticalSection(&g_hbn->m_mutex);
 		g_hbn->m_node = NULL;
+		if (g_proxy_usehosts)
+		{
+			EnterCriticalSection(&g_hbn->m_mutex);
+			FILE * f = fopen(g_hosts_path, "r");
+			if (f)
+			{
+				static char line[1024];
+				while (fgets(line, 1024, f))
+				{
+					// strip comment
+					char * grid = strchr(line, '#');
+					if (grid)
+					{
+						grid[0] = '\0';
+					}
+					// convert to hostent
+					u_long ip = NO_IP;
+					char * ip_s = NULL;
+					char * host_s = NULL;
+					char * pch = strtok(line, " \t\n\r");
+					while (pch)
+					{
+						if (!ip_s)
+						{
+							ip_s = pch;
+							ip = stub_inet_addr(ip_s);
+						} else
+						{
+							host_s = pch;
+							// create new record
+							HBN_NODE * node = (HBN_NODE *)malloc(sizeof(HBN_NODE));
+							memset(node, 0, sizeof(HBN_NODE));
+							node->m_hostent = _hbn_newhostent(host_s, ip);
+							node->m_host_ip = (char *)malloc(strlen(ip_s) + 1);
+							strcpy(node->m_host_ip, ip_s);
+							node->m_next = g_hbn->m_node;
+							g_hbn->m_node = node;
+						}
+						pch = strtok(NULL, " \t\n\r");
+					}
+				}
+				fclose(f);
+			}
+			LeaveCriticalSection(&g_hbn->m_mutex);
+		}
 	}
 }
 
@@ -131,6 +187,10 @@ void hbn_deinit(void)
 			{
 				g_hbn->m_node = node->m_next;
 				_hbn_deletehostent(node->m_hostent);
+				if (node->m_host_ip)
+				{
+					free(node->m_host_ip);
+				}
 				free(node);
 				node = g_hbn->m_node;
 			}
@@ -151,7 +211,7 @@ PHOSTENT hbn_gethostbyname(const char * a)
 		HBN_NODE * find_node = g_hbn->m_node;
 		while (find_node)
 		{
-			if (find_node->m_hostent && find_node->m_hostent->h_name && !strcmp(find_node->m_hostent->h_name, a))
+			if (find_node->m_hostent && find_node->m_hostent->h_name && !_stricmp(find_node->m_hostent->h_name, a))
 			{
 				break;
 			}
@@ -166,7 +226,7 @@ PHOSTENT hbn_gethostbyname(const char * a)
 			// not found. create new record
 			HBN_NODE * node = (HBN_NODE *)malloc(sizeof(HBN_NODE));
 			memset(node, 0, sizeof(HBN_NODE));
-			node->m_hostent = _hbn_newhostent(a);
+			node->m_hostent = _hbn_newhostent(a, NO_IP);
 			node->m_next = g_hbn->m_node;
 			g_hbn->m_node = node;
 			result = node->m_hostent;
@@ -192,9 +252,16 @@ char * hbn_getnamebyaddr(u_long a)
 			}
 			find_node = find_node->m_next;
 		}
-		if (find_node && find_node->m_hostent && find_node->m_hostent->h_name)
+		if (find_node)
 		{
-			result = find_node->m_hostent->h_name;
+			if (find_node->m_host_ip)
+			{
+				result = find_node->m_host_ip;
+			} else
+			if (find_node->m_hostent && find_node->m_hostent->h_name)
+			{
+				result = find_node->m_hostent->h_name;
+			}
 		}
 		LeaveCriticalSection(&g_hbn->m_mutex);
 	}
