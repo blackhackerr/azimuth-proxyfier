@@ -46,6 +46,7 @@ extern int g_proxy_usentlm;
 extern char g_proxy_user[MAX_PATH];
 extern char g_proxy_pass[MAX_PATH];
 extern int g_proxy_usehosts;
+extern int g_proxy_usens;
 
 void conf_init(void);
 void conf_deinit(void);

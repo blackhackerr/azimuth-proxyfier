@@ -44,6 +44,7 @@ int g_proxy_usentlm = 0;
 char g_proxy_user[MAX_PATH] = {0};
 char g_proxy_pass[MAX_PATH] = {0};
 int g_proxy_usehosts = 0;
+int g_proxy_usens = 0;
 
 void conf_init(void)
 {
@@ -55,6 +56,7 @@ void conf_init(void)
 	GetPrivateProfileString("proxy", "user", "guest", g_proxy_user, MAX_PATH - 1, g_ini_path);
 	GetPrivateProfileString("proxy", "pass", "guest", g_proxy_pass, MAX_PATH - 1, g_ini_path);
 	g_proxy_usehosts = GetPrivateProfileInt("proxy", "hosts", 0, g_ini_path);
+	g_proxy_usens = GetPrivateProfileInt("proxy", "ns", 0, g_ini_path);
 }
 
 void conf_deinit(void)

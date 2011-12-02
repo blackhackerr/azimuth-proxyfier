@@ -120,6 +120,32 @@ void _hbn_deletehostent(HOSTENT * a)
 	}
 }
 
+int _hbn_ishosts(const char * a)
+{
+	int result = 0;
+	if (g_hbn && a)
+	{
+		EnterCriticalSection(&g_hbn->m_mutex);
+		// find exist record
+		HBN_NODE * find_node = g_hbn->m_node;
+		while (find_node)
+		{
+			if (find_node->m_hostent && find_node->m_hostent->h_name && !_stricmp(find_node->m_hostent->h_name, a))
+			{
+				break;
+			}
+			find_node = find_node->m_next;
+		}
+		if (find_node && find_node->m_host_ip)
+		{
+			// found
+			result = 1;
+		}
+		LeaveCriticalSection(&g_hbn->m_mutex);
+	}
+	return result;
+}
+
 void hbn_init(void)
 {
 	if (!g_hbn)
@@ -204,34 +230,41 @@ void hbn_deinit(void)
 PHOSTENT hbn_gethostbyname(const char * a)
 {
 	PHOSTENT result = NULL;
-	if (a && g_hbn)
+	if (a)
 	{
-		EnterCriticalSection(&g_hbn->m_mutex);
-		// find exist record
-		HBN_NODE * find_node = g_hbn->m_node;
-		while (find_node)
+		if (g_proxy_usens && !_hbn_ishosts(a)) // name service (local hosts file has first priority)
 		{
-			if (find_node->m_hostent && find_node->m_hostent->h_name && !_stricmp(find_node->m_hostent->h_name, a))
+			result = stub_gethostbyname(a);
+		}
+		if (g_hbn && !result)
+		{
+			EnterCriticalSection(&g_hbn->m_mutex);
+			// find exist record
+			HBN_NODE * find_node = g_hbn->m_node;
+			while (find_node)
 			{
-				break;
+				if (find_node->m_hostent && find_node->m_hostent->h_name && !_stricmp(find_node->m_hostent->h_name, a))
+				{
+					break;
+				}
+				find_node = find_node->m_next;
 			}
-			find_node = find_node->m_next;
+			if (find_node)
+			{
+				// found
+				result = find_node->m_hostent;
+			} else
+			{
+				// not found. create new record
+				HBN_NODE * node = (HBN_NODE *)malloc(sizeof(HBN_NODE));
+				memset(node, 0, sizeof(HBN_NODE));
+				node->m_hostent = _hbn_newhostent(a, NO_IP);
+				node->m_next = g_hbn->m_node;
+				g_hbn->m_node = node;
+				result = node->m_hostent;
+			}
+			LeaveCriticalSection(&g_hbn->m_mutex);
 		}
-		if (find_node)
-		{
-			// found
-			result = find_node->m_hostent;
-		} else
-		{
-			// not found. create new record
-			HBN_NODE * node = (HBN_NODE *)malloc(sizeof(HBN_NODE));
-			memset(node, 0, sizeof(HBN_NODE));
-			node->m_hostent = _hbn_newhostent(a, NO_IP);
-			node->m_next = g_hbn->m_node;
-			g_hbn->m_node = node;
-			result = node->m_hostent;
-		}
-		LeaveCriticalSection(&g_hbn->m_mutex);
 	}
 	return result;
 }
